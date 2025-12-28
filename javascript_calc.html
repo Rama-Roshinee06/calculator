@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff359a 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+        }
+        .title {
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .display-container {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .display {
+            font-size: 2.5rem;
+            color: #667eea;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 10px;
+            border-radius: 8px;
+            background: #f8f9ff;
+            font-weight: bold;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .cube-container {
+            width: 320px;
+            height: 320px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: floatCube 3s ease-in-out infinite;
+            margin: 0 auto;
+        }
+        @keyframes floatCube {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .face {
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            background: rgba(255,255,255,0.95);
+            border: 3px solid #667eea;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .face.front { transform: translateZ(160px); }
+        .face.back { transform: rotateY(180deg) translateZ(160px); }
+        .face.right { transform: rotateY(90deg) translateZ(160px); }
+        .face.left { transform: rotateY(-90deg) translateZ(160px); }
+        .face.top { transform: rotateX(90deg) translateZ(160px); }
+        .face.bottom { transform: rotateX(-90deg) translateZ(160px); }
+        .btn {
+            border: none;
+            border-radius: 10px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .btn.number {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .btn.operator {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .btn.equals {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            grid-column: span 2;
+        }
+        .btn.clear {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        .btn.special {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(255,255,255,0.9);
+            color: #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(0,0,0,0.3);
+            background: white;
+        }
+        .particles {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: float 15s infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-100px) translateX(50px); }
+            50% { transform: translateY(-200px) translateX(-50px); }
+            75% { transform: translateY(-100px) translateX(100px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <h1 class="title">🎲 3D Cube Calculator 🎲</h1>
+        
+        <div class="display-container">
+            <div class="display" id="display">0</div>
+        </div>
+        
+        <div class="cube-container">
+            <div class="cube" id="cube">
+                <!-- Front Face: Basic Operations -->
+                <div class="face front">
+                    <button class="btn clear" onclick="clearAll()">AC</button>
+                    <button class="btn operator" onclick="appendOp('/')">/</button>
+                    <button class="btn operator" onclick="appendOp('*')">×</button>
+                    <button class="btn special" onclick="backspace()">←</button>
+                    
+                    <button class="btn number" onclick="appendNum('7')">7</button>
+                    <button class="btn number" onclick="appendNum('8')">8</button>
+                    <button class="btn number" onclick="appendNum('9')">9</button>
+                    <button class="btn operator" onclick="appendOp('-')">-</button>
+                    
+                    <button class="btn number" onclick="appendNum('4')">4</button>
+                    <button class="btn number" onclick="appendNum('5')">5</button>
+                    <button class="btn number" onclick="appendNum('6')">6</button>
+                    <button class="btn operator" onclick="appendOp('+')">+</button>
+                    
+                    <button class="btn number" onclick="appendNum('1')">1</button>
+                    <button class="btn number" onclick="appendNum('2')">2</button>
+                    <button class="btn number" onclick="appendNum('3')">3</button>
+                    <button class="btn equals" onclick="calculate()">=</button>
+                    <button class="btn number" onclick="appendNum('0')">0</button>
+                    <button class="btn number" onclick="appendNum('.')">.</button>
+                </div>
+                
+                <!-- Right Face: Scientific Functions -->
+                <div class="face right">
+                    <button class="btn special" onclick="appendFunc('Math.sqrt(')">√</button>
+                    <button class="btn special" onclick="appendFunc('Math.pow(')">x²</button>
+                    <button class="btn special" onclick="appendFunc('Math.sin(')">sin</button>
+                    <button class="btn special" onclick="appendFunc('Math.cos(')">cos</button>
+                    
+                    <button class="btn special" onclick="appendFunc('Math.tan(')">tan</button>
+                    <button class="btn special" onclick="appendFunc('Math.log(')">log</button>
+                    <button class="btn special" onclick="appendFunc('Math.exp(')">eˣ</button>
+                    <button class="btn special" onclick="appendNum('Math.PI')">π</button>
+                    
+                    <button class="btn number" onclick="appendNum('7')">7</button>
+                    <button class="btn number" onclick="appendNum('8')">8</button>
+                    <button class="btn number" onclick="appendNum('9')">9</button>
+                    <button class="btn operator" onclick="appendOp('/')">/</button>
+                    
+                    <button class="btn number" onclick="appendNum('4')">4</button>
+                    <button class="btn number" onclick="appendNum('5')">5</button>
+                    <button class="btn number" onclick="appendNum('6')">6</button>
+                    <button class="btn equals" onclick="calculate()">=</button>
+                </div>
+                
+                <!-- Back Face: Memory & Special -->
+                <div class="face back">
+                    <button class="btn special" onclick="memoryStore()">MS</button>
+                    <button class="btn special" onclick="memoryRecall()">MR</button>
+                    <button class="btn special" onclick="memoryClear()">MC</button>
+                    <button class="btn special" onclick="memoryAdd()">M+</button>
+                    
+                    <button class="btn number" onclick="appendNum('7')">7</button>
+                    <button class="btn number" onclick="appendNum('8')">8</button>
+                    <button class="btn number" onclick="appendNum('9')">9</button>
+                    <button class="btn operator" onclick="appendOp('-')">-</button>
+                    
+                    <button class="btn number" onclick="appendNum('4')">4</button>
+                    <button class="btn number" onclick="appendNum('5')">5</button>
+                    <button class="btn number" onclick="appendNum('6')">6</button>
+                    <button class="btn operator" onclick="appendOp('+')">+</button>
+                    
+                    <button class="btn number" onclick="appendNum('1')">1</button>
+                    <button class="btn number" onclick="appendNum('2')">2</button>
+                    <button class="btn number" onclick="appendNum('3')">3</button>
+                    <button class="btn equals" onclick="calculate()">=</button>
+                    <button class="btn number" onclick="appendNum('0')">0</button>
+                    <button class="btn clear" onclick="clearAll()">C</button>
+                </div>
+                
+                <!-- Left Face: Percentage & Fractions -->
+                <div class="face left">
+                    <button class="btn special" onclick="percentage()">%</button>
+                    <button class="btn special" onclick="reciprocal()">1/x</button>
+                    <button class="btn special" onclick="negate()">+/-</button>
+                    <button class="btn operator" onclick="appendOp('*')">×</button>
+                    
+                    <button class="btn number" onclick="appendNum('7')">7</button>
+                    <button class="btn number" onclick="appendNum('8')">8</button>
+                    <button class="btn number" onclick="appendNum('9')">9</button>
+                    <button class="btn operator" onclick="appendOp('/')">/</button>
+                    
+                    <button class="btn number" onclick="appendNum('4')">4</button>
+                    <button class="btn number" onclick="appendNum('5')">5</button>
+                    <button class="btn number" onclick="appendNum('6')">6</button>
+                    <button class="btn operator" onclick="appendOp('-')">-</button>
+                    
+                    <button class="btn number" onclick="appendNum('1')">1</button>
+                    <button class="btn number" onclick="appendNum('2')">2</button>
+                    <button class="btn number" onclick="appendNum('3')">3</button>
+                    <button class="btn equals" onclick="calculate()">=</button>
+                    <button class="btn number" onclick="appendNum('0')">0</button>
+                    <button class="btn operator" onclick="appendOp('+')">+</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" onclick="rotateFace('front')">🔢 Basic</button>
+            <button class="control-btn" onclick="rotateFace('right')">🔬 Scientific</button>
+            <button class="control-btn" onclick="rotateFace('back')">💾 Memory</button>
+            <button class="control-btn" onclick="rotateFace('left')">📊 Special</button>
+        </div>
+    </div>
+
+    <script>
+        let currentInput = '0';
+        let memory = 0;
+        const display = document.getElementById('display');
+        const cube = document.getElementById('cube');
+        
+        // Create floating particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 15 + 's';
+            particlesContainer.appendChild(particle);
+        }
+        
+        function updateDisplay() {
+            display.textContent = currentInput;
+        }
+        
+        function appendNum(num) {
+            if (currentInput === '0') {
+                currentInput = num;
+            } else {
+                currentInput += num;
+            }
+            updateDisplay();
+        }
+        
+        function appendOp(op) {
+            currentInput += op;
+            updateDisplay();
+        }
+        
+        function appendFunc(func) {
+            if (currentInput === '0') {
+                currentInput = func;
+            } else {
+                currentInput += func;
+            }
+            updateDisplay();
+        }
+        
+        function clearAll() {
+            currentInput = '0';
+            updateDisplay();
+        }
+        
+        function backspace() {
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+        
+        function calculate() {
+            try {
+                let expr = currentInput.replace(/×/g, '*').replace(/÷/g, '/');
+                let result = eval(expr);
+                currentInput = result.toString();
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+                setTimeout(() => {
+                    currentInput = '0';
+                    updateDisplay();
+                }, 1500);
+            }
+        }
+        
+        function percentage() {
+            try {
+                let result = eval(currentInput) / 100;
+                currentInput = result.toString();
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+        
+        function reciprocal() {
+            try {
+                let result = 1 / eval(currentInput);
+                currentInput = result.toString();
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+        
+        function negate() {
+            try {
+                let result = -eval(currentInput);
+                currentInput = result.toString();
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+        
+        function memoryStore() {
+            try {
+                memory = eval(currentInput);
+                alert('Stored in memory: ' + memory);
+            } catch (e) {}
+        }
+        
+        function memoryRecall() {
+            currentInput = memory.toString();
+            updateDisplay();
+        }
+        
+        function memoryClear() {
+            memory = 0;
+            alert('Memory cleared');
+        }
+        
+        function memoryAdd() {
+            try {
+                memory += eval(currentInput);
+                alert('Added to memory. Total: ' + memory);
+            } catch (e) {}
+        }
+        
+        function rotateFace(face) {
+            switch(face) {
+                case 'front':
+                    cube.style.transform = 'rotateY(0deg) rotateX(0deg)';
+                    break;
+                case 'right':
+                    cube.style.transform = 'rotateY(-90deg) rotateX(0deg)';
+                    break;
+                case 'back':
+                    cube.style.transform = 'rotateY(-180deg) rotateX(0deg)';
+                    break;
+                case 'left':
+                    cube.style.transform = 'rotateY(90deg) rotateX(0deg)';
+                    break;
+            }
+        }
+        
+        // Auto-rotate demo on load
+        let autoRotate = 0;
+        setInterval(() => {
+            if (autoRotate < 4) {
+                autoRotate++;
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
